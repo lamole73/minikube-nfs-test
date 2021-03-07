@@ -1,0 +1,84 @@
+# from: https://stackoverflow.com/questions/64954206/k8s-persistentvolume-shared-among-multiple-persistentvolumeclaims-for-local-test
+# adapted due to: https://hub.docker.com/r/itsthenetwork/nfs-server-alpine
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nfs-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nfs-server
+  template:
+    metadata:
+      labels:
+        app: nfs-server
+    spec:
+      containers:
+        - name: nfs-server
+          image: itsthenetwork/nfs-server-alpine:12
+          ports:
+            - containerPort: 2049
+              name: tcp
+          securityContext:
+            # As reported here https://github.com/sjiveson/nfs-server-alpine/issues/8 it appears Kubernetes requires the privileged: true option to be set:
+#            privileged: true
+            # To use capabilities instead:
+            # Note that AllowPrivilegeEscalation is automatically set to true when privileged mode is set to true or the SYS_ADMIN capability added.
+            capabilities:
+              add: ["SYS_ADMIN", "SETPCAP"]
+          env:
+            - name: SHARED_DIRECTORY
+              value: "/data/nfs"
+          volumeMounts:
+            - name: pvc
+              mountPath: /data/nfs
+      volumes:
+        - name: pvc
+          persistentVolumeClaim:
+            claimName: nfs-server-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nfs-server
+  labels:
+    name: nfs-server
+spec:
+  type: NodePort
+  selector:
+    app: nfs-server
+  ports:
+    - name: tcp-2049
+      port: 2049
+      protocol: TCP
+---
+#
+# PV and PVC of the NFS server exports
+#
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-server-pv
+spec:
+  storageClassName: nfs-server-pv
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 5Gi
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /data/nfs/
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nfs-server-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: nfs-server-pv
+  resources:
+    requests:
+      storage: 5Gi
+  volumeName: nfs-server-pv

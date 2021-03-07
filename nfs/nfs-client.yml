@@ -1,0 +1,54 @@
+# https://matthewpalmer.net/kubernetes-app-developer/articles/kubernetes-volumes-example-nfs-persistent-volume.html
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nfs-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nfs-client
+  template:
+    metadata:
+      labels:
+        app: nfs-client
+    spec:
+      containers:
+        - name: nfs-client
+          image: alpine
+          command: ["/bin/sh"]
+          args: ["-c", "while true; do date >> /data/nfs/file.txt; sleep 5; done"]
+          volumeMounts:
+            - name: pvc
+              mountPath: /data/nfs
+      volumes:
+        - name: pvc
+          persistentVolumeClaim:
+            claimName: nfs-client-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nfs-client-pvc
+spec:
+  storageClassName: nfs
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  volumeName: nfs-client-pv
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-client-pv
+spec:
+  storageClassName: nfs
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 1Gi
+  nfs:
+    path: /
+    server: 10.111.121.82 #<<-- IP from `kubectl get svc -l name=nfs-server -n nfs`
