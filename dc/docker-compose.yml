@@ -1,0 +1,28 @@
+#########################################
+### NFS server Docker development env ###
+#########################################
+
+### Infrastructure services ###
+
+version: '3.1'
+services:
+
+  ### INFRASTRUCTURE ###
+
+  ### NFS SERVER ###
+  # https://hub.docker.com/r/itsthenetwork/nfs-server-alpine
+  nfs-server:
+    image: itsthenetwork/nfs-server-alpine:12
+    container_name: nfs-server
+    restart: unless-stopped
+    # When using Docker Compose you can specify privileged mode like so:
+#    privileged: true
+    # To use capabilities instead:
+    cap_add:
+      - SYS_ADMIN
+      - SETPCAP
+    environment:
+      ### local native folder
+      SHARED_DIRECTORY: /data/nfs
+    volumes:
+      - ${HOST_FOLDER_NFS_SERVER}:/data/nfs

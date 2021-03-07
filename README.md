@@ -5,6 +5,9 @@ Various resources to install an NFS server / client on minikube.
 This NFS server should be made available as PV and PVC to be used by pods. On this example we just write every 5 seconds on a `file.txt` inside the NFS share. 
 
 ## Setup
+There are 2 options for the nfs server, to run on minikube and to run on docker-compose on the host machine.
+
+### Setup with NFS on minikube
 Verify minikube is running:
 ```
 labros@beastx:~$ minikube status -p minikube-test
@@ -43,7 +46,19 @@ kubectl exec -it -n nfs nfs-server-68d7965f59-7n9vb -- bash
 tail -f /data/nfs/file.txt
 ```
 
-# References
+### Setup with NFS on docker-compose
+Goto `dc` folder and run the docker-compose there.
+In this case the NFS server is exposed on localhost:2049/
+
+```shell
+cd dc
+docker-compose up -d
+# To see the logs
+docker-compose logs -f
+```
+
+
+## References
 * The image of nfs server, https://hub.docker.com/r/itsthenetwork/nfs-server-alpine
 * How to create nfs server, https://stackoverflow.com/questions/64954206/k8s-persistentvolume-shared-among-multiple-persistentvolumeclaims-for-local-test
 * For the pod as nfs client, https://matthewpalmer.net/kubernetes-app-developer/articles/kubernetes-volumes-example-nfs-persistent-volume.html

@@ -1,0 +1,13 @@
+#########################################
+### NFS server Docker development env ###
+#########################################
+
+version: '3.1'
+services:
+
+  ### INFRASTRUCTURE ###
+
+  ### NFS SERVER ###
+  nfs-server:
+    ports:
+      - "2049:2049"
