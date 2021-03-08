@@ -25,4 +25,9 @@ services:
       ### local native folder
       SHARED_DIRECTORY: /data/nfs
     volumes:
-      - ${HOST_FOLDER_NFS_SERVER}:/data/nfs
+      - nfs_data:/data/nfs
+#      - ${HOST_FOLDER_NFS_SERVER}:/data/nfs
+
+volumes:
+  # nfs data
+  nfs_data:
